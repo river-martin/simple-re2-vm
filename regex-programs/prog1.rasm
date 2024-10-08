@@ -1,0 +1,12 @@
++ nop -> 3
+. byte [00-ff] 0 -> 1
++ capture 2 -> 6
++ capture 4 -> 10
+. capture 6 -> 11
+. byte [61-61] 0 -> 7
+. capture 3 -> 8
++ nop -> 3
+. match! 0
+. capture 5 -> 8
+. byte [62-62] 0 -> 12
+. capture 7 -> 8
