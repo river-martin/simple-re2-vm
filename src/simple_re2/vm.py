@@ -98,6 +98,7 @@ class WorkQueue:
                             ip = ip + 1
                     case InstrMatch():
                         assert instr.indicator == "."
+                        # NOTE: The line below fixes a bug in the actual C++ implementation of RE2
                         self.contains_InstrMatch = True
                         ip = None
                         continue
@@ -144,8 +145,7 @@ def _run_on_byte(
                         # We have to find the last instruction in the current sublist, since we don't have a hint
                         while instr.indicator == "+":
                             i += 1
-                            ip = clist[i]
-                            instr = instrs[ip]
+                            instr = instrs[clist[i]]
             case InstrMatch():
                 # We only care about the first match
                 return
@@ -167,7 +167,7 @@ def run(prog: list[Instruction], input: bytes):
     Returns:
         int | None: The end of the last match in the input, or None if no match was found
     """
-    # Add start instruction
+    # Add start instruction at index 0
     prog = [InstrNop(".", "nop", 1)] + prog
     q = WorkQueue()
     next_q = WorkQueue()

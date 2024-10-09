@@ -1,0 +1,14 @@
+; forward prog
++ nop -> 3
+. byte [00-ff] 0 -> 1
++ nop -> 12
+. nop -> 13
++ byte [61-61] 1 -> 8
++ capture 4 -> 11
+. byte [62-62] 0 -> 8
+. capture 3 -> 9
++ nop -> 12
+. nop -> 13
+. capture 5 -> 8
+. capture 2 -> 5
+. match! 0
