@@ -83,16 +83,19 @@ class WorkQueue:
                 match instr:
                     case InstrCapture() | InstrNop():
                         # Captures are treated as no-ops by the DFA because it does not track submatch boundaries
+                        if instr.indicator == "+":
+                            ip_stack.append(ip + 1)
                         ip = instr.out
-                        break
                     case InstrByteRange():
                         if instr.indicator == ".":
                             # We only follow empty transitions here, and we are at the end of the sublist
                             ip = None
                             continue
-                        # The VM should go to the next instruction in the sublist if the byte is out of range
-                        # (i.e. if the `ByteRange` instruction fails to consume the current byte)
-                        ip = ip + 1
+                        else:
+                            assert instr.indicator == "+"
+                            # The VM should go to the next instruction in the sublist if the byte is out of range
+                            # (i.e. if the `ByteRange` instruction fails to consume the current byte)
+                            ip = ip + 1
                     case InstrMatch():
                         assert instr.indicator == "."
                         self.contains_InstrMatch = True
@@ -115,7 +118,7 @@ class WorkQueue:
 
 
 def _run_on_byte(
-    instrs: list[Instruction], clist: list[ip_type], nq: WorkQueue, c: byte
+    instrs: list[Instruction], clist: list[ip_type], next_q: WorkQueue, c: byte
 ):
     i = 0  # index into clist
     while i < len(clist):
@@ -131,7 +134,7 @@ def _run_on_byte(
             case InstrByteRange():
                 if instr.min <= c <= instr.max:
                     # When the DFA is in the next state, it should continue execution with the byte consumed
-                    nq.add(instr.out, instrs)
+                    next_q.add(instr.out, instrs)
                     # We can skip over the rest of the instructions in the current sublist
                     if instr.hint > 0:
                         # The hint tells us where the first instruction in the next sublist is
@@ -171,15 +174,12 @@ def run(prog: list[Instruction], input: bytes):
     next_q = WorkQueue()
     q.add(0, prog)
     sp = 0
-    last_match_sp = None
+    last_match_sp = sp if q.contains_InstrMatch else None
     while sp < len(input) and not q.is_empty():
-        print(sp)
         _run_on_byte(prog, q.to_list(), next_q, input[sp])
-        print(q.to_list())
-        print(next_q.to_list())
+        sp += 1
         if next_q.contains_InstrMatch:
             last_match_sp = sp
-        sp += 1
         # Swap the queues
         q, next_q = next_q, q
         next_q.clear()
