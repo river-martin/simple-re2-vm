@@ -2,6 +2,10 @@ import re
 import simple_re2.vm as vm
 
 
+class EmptyLineError(Exception):
+    pass
+
+
 def expect(
     tok_str: str,
     rule_name: str,
@@ -40,6 +44,8 @@ def parse_instruction(line: str) -> vm.Instruction:
     # Remove comments
     line = re.sub(r"(.*);.*", r"\1", line)
     line = line.strip()
+    if line == "":
+        raise EmptyLineError()
 
     token_strs = iter(line.split())
 
@@ -89,5 +95,8 @@ def assemble(regex_prog_file):
     """Create a list of `Instruction` objects from a regex program file."""
     instructions = list[vm.Instruction]()
     for line in regex_prog_file:
-        instructions.append(parse_instruction(line))
+        try:
+            instructions.append(parse_instruction(line))
+        except EmptyLineError as e:
+            pass
     return instructions
