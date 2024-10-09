@@ -123,8 +123,6 @@ def _run_on_byte(
     i = 0  # index into clist
     while i < len(clist):
         ip = clist[i]
-        next_ip = ip
-        ip = next_ip
         instr = instrs[ip]
         match instr:
             case InstrNop() | InstrCapture():
@@ -133,7 +131,8 @@ def _run_on_byte(
                 pass
             case InstrByteRange():
                 if instr.min <= c <= instr.max:
-                    # When the DFA is in the next state, it should continue execution with the byte consumed
+                    # When the DFA is in the next state, it should
+                    # continue execution along the path that consumed the byte
                     next_q.add(instr.out, instrs)
                     # We can skip over the rest of the instructions in the current sublist
                     if instr.hint > 0:
@@ -204,7 +203,7 @@ def main():
     input_bytes = args.input.encode("utf-8")
     match_end = run(prog, input_bytes)
     if match_end is not None:
-        print(f"Matched up to byte {match_end}")
+        print(f"Match ends at byte {match_end}")
     else:
         print("No match found")
 
